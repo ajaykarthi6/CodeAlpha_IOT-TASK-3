@@ -1,0 +1,38 @@
+name: IoT Simulator Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Python Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyserial 2>/dev/null || true
+
+      - name: Run LED logic tests
+        run: python3 tests/test_led_logic.py
+
+      - name: Verify sketches exist
+        run: |
+          test -f src/sketch.ino          && echo "✓ sketch.ino present"
+          test -f src/sketch_extended.ino && echo "✓ sketch_extended.ino present"
+          test -f simulation/simulate.py  && echo "✓ simulate.py present"
+
+      - name: Quick smoke test — simulator (10 cycles)
+        run: python3 simulation/simulate.py --scenario heatwave --cycles 10
